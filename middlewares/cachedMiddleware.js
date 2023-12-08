@@ -21,7 +21,7 @@ const cacheMiddleware = async (req, res, next) => {
 
     // If data is not in the cache, proceed to the controller
     res.sendResponse = res.json;
-    res.json = (body) => {
+    res.status(200).json = (body) => {
       setAsync(key, JSON.stringify(body), "EX", 7200);
       res.sendResponse(body);
     };

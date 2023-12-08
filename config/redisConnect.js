@@ -8,8 +8,6 @@ const client = redis.createClient({
   port: 6379,
 });
 
-console.log("Redis client->", client);
-
 client.on("error", (err) => {
   console.error(`Redis error: ${err}`);
 });
