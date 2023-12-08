@@ -3,6 +3,10 @@ const fs = require("fs");
 const caCert = fs.readFileSync(process.env.CA_CERT_PATH);
 const { Product } = require("../models/productModel");
 const { Client } = require("@elastic/elasticsearch");
+const { delAsync } = require("../config/redisConnect");
+
+const productsAll = "/api/products/all-products";
+const productOne = "/api/products/get-product/";
 
 // Create an Elasticsearch client
 const client = new Client({
@@ -133,6 +137,7 @@ const addProductsController = async (req, res) => {
     });
 
     console.log("Elasticsearch response:", response);
+    delAsync(productsAll);
 
     res.status(201).json({
       success: true,
@@ -184,6 +189,9 @@ const updateProductsController = async (req, res, next) => {
     });
 
     console.log("Elastic search response", response);
+    delAsync(productsAll);
+    const productNew = productOne + productId;
+    delAsync(productNew);
 
     res.status(200).json({
       success: true,
@@ -237,6 +245,9 @@ const deleteProductController = async (req, res, next) => {
     });
 
     console.log("Elastic search response", response);
+    delAsync(productsAll);
+    const productNew = productOne + productId;
+    delAsync(productNew);
 
     res.status(200).json({
       success: true,
