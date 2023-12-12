@@ -133,6 +133,7 @@ const addProductsController = async (req, res) => {
         color,
         specifications,
         quantity,
+        image: newProduct.image,
       },
     });
 
@@ -203,6 +204,55 @@ const updateProductsController = async (req, res, next) => {
   }
 };
 
+const uploadPicController = async (req, res, next) => {
+  try {
+    const productId = req.params.id;
+    const imageURLs = req.files.map((file) => file.location);
+
+    // Fetch existing image URLs from the database
+    const existingProduct = await Product.findByPk(productId);
+    const existingImageURLs = existingProduct.image || "";
+
+    const updatedImageURLs = existingImageURLs
+      .split(",")
+      .map((url) =>
+        url.startsWith("https://www.google.com/")
+          ? imageURLs.join(",") // Replace existing URL with new URLs
+          : url + "," + imageURLs
+      )
+      .join(",");
+
+    await Product.update(
+      { image: updatedImageURLs },
+      { where: { id: productId } }
+    );
+
+    const response = await client.update({
+      index: INDEX_NAME,
+      id: productId,
+      body: {
+        doc: {
+          image: updatedImageURLs,
+        },
+      },
+    });
+
+    console.log("Elastic-search response", response);
+
+    delAsync(productsAll);
+    const productNew = productOne + productId;
+    delAsync(productNew);
+
+    res.status(200).json({
+      success: true,
+      message: "Image uploaded successfully!",
+      urls: updatedImageURLs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const findOneProductController = async (req, res, next) => {
   try {
     const productId = req.params.id;
@@ -265,4 +315,5 @@ module.exports = {
   updateProductsController,
   findOneProductController,
   deleteProductController,
+  uploadPicController,
 };
